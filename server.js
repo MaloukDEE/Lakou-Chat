@@ -44,7 +44,7 @@ async function save() {
   const now = Date.now();
   for (const id of Object.keys(rooms)) {
     if (PUBLIC.includes(id) || users(id).length) continue;
-    if (!rooms[id].msgs.length || now - rooms[id].at > 30 * DAY) delete rooms[id];
+    if ((!rooms[id].msgs.length && !rooms[id].title) || now - rooms[id].at > 30 * DAY) delete rooms[id];
   }
   const priv = Object.keys(rooms).filter(id => !PUBLIC.includes(id)).sort((a, b) => rooms[b].at - rooms[a].at);
   for (const id of priv.slice(300)) if (!users(id).length) delete rooms[id];
@@ -108,7 +108,7 @@ const server = http.createServer(async (req, res) => {
       if (isNew) { clients.delete(id); presence(prev.room, { type: 'leave', name: prev.name }); }
     }
     clients.set(id, { res, name, hue, room });
-    send(res, 'hello', { room, history: getRoom(room).msgs, users: users(room), counts: counts() });
+    send(res, 'hello', { room, title: getRoom(room).title || '', history: getRoom(room).msgs, users: users(room), counts: counts() });
     presence(room, isNew ? { type: 'join', name, id } : null);
     const hb = setInterval(() => res.write(': ping\n\n'), 20000);
     req.on('close', () => {
@@ -147,6 +147,15 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/send') {
       const text = String(d.text || '').trim().slice(0, 1000);
       if (text) addMsg(c, d.id, text, d.replyTo);
+    } else if (url.pathname === '/rename') {
+      const title = String(d.title || '').replace(/\s+/g, ' ').trim().slice(0, 30);
+      if (!PUBLIC.includes(c.room)) {
+        const R = getRoom(c.room);
+        if (title) R.title = title; else delete R.title;
+        R.at = Date.now();
+        broadcast(c.room, 'title', { title, by: c.name });
+        dirty();
+      }
     } else if (url.pathname === '/typing') {
       broadcast(c.room, 'typing', { id: d.id, name: c.name });
     } else if (url.pathname === '/react') {

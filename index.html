@@ -153,7 +153,10 @@ body.rec .compose{display:none}body.rec #rec{display:flex}
 .addroom:hover{color:var(--ink);border-color:var(--acc);background:rgba(255,255,255,.05)}
 .room .x{opacity:.45;padding:2px 7px;border-radius:8px;font-size:12px}.room .x:hover{opacity:1;background:rgba(255,255,255,.14)}
 .foot{flex-wrap:wrap}.foot .chip{flex:1 1 40%}
-#invite{display:none}
+#invite,#ren{display:none}
+#rnm .go{margin-top:16px}#rnm input{text-align:center}
+.modalx{position:fixed;inset:0;z-index:40;display:none;place-items:center;padding:20px;background:rgba(0,0,0,.6);animation:fade .2s}
+.modalx.open{display:grid}.modalx .card{background:rgba(18,15,32,.96)}.modalx h2{font-size:24px}
 #modal{position:fixed;inset:0;z-index:40;display:none;place-items:center;padding:20px;background:rgba(0,0,0,.6);animation:fade .2s}
 #modal.open{display:grid}
 #modal .card{background:rgba(18,15,32,.96)}#modal h2{font-size:24px}#modal .go{margin-top:0}
@@ -210,6 +213,7 @@ body.rec .compose{display:none}body.rec #rec{display:flex}
     <header>
       <button class="icon" id="menu" aria-label="Meni">☰</button>
       <div class="t"><b id="rt">Lakou</b><small id="sub"></small></div>
+      <button class="icon" id="ren" aria-label="Chanje non sal la" title="Chanje non sal la">✏️</button>
       <button class="icon" id="invite" aria-label="Kopye lyen envitasyon an" title="Kopye lyen envitasyon an">🔗</button>
       <button class="icon" id="mute2" aria-label="Son">🔊</button>
     </header>
@@ -239,6 +243,11 @@ body.rec .compose{display:none}body.rec #rec{display:flex}
   <div class="or">OSWA ANTRE AK YON KÒD</div>
   <form id="codef"><input type="text" id="code" maxlength="12" placeholder="KÒD" autocomplete="off" aria-label="Kòd sal la"><button class="chip">Antre</button></form>
 </div></div>
+<div id="rnm" class="modalx"><form class="card panel" id="rnf">
+  <h2>✏️ Non sal la</h2><p>Tout moun ki nan sal la ap wè nouvo non an. Kòd la ak lyen an pa chanje.</p>
+  <input type="text" id="rni" maxlength="30" placeholder="Pa egzanp: Fanmi mwen" autocomplete="off" aria-label="Non sal la">
+  <button class="go">Sove non an</button>
+</form></div>
 <div id="lb"><img alt="Foto an gran"></div>
 <div id="toast" role="status"></div>
 
@@ -246,7 +255,9 @@ body.rec .compose{display:none}body.rec #rec{display:flex}
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const ROOMS={lakou:['🏡','Lakou','Tout moun byenveni'],mizik:['🎶','Mizik','Konpa, rap, rasin…'],tek:['🛰️','Teknoloji','Kòd, lide, avni'],blag:['😂','Blag','Vin ri ak nou']};
 let priv=[];try{priv=JSON.parse(localStorage.lpriv||'[]').filter(c=>/^[a-z0-9]{4,12}$/.test(c))}catch{}
-const info=k=>ROOMS[k]||['🔒','Sal '+k.toUpperCase(),'sal prive, pataje lyen an ak zanmi w'];
+let titles={};try{titles=JSON.parse(localStorage.ltitles||'{}')||{}}catch{}
+const info=k=>ROOMS[k]||['🔒',titles[k]||'Sal '+k.toUpperCase(),'sal prive, pataje lyen an ak zanmi w'];
+function setTitle(k,t){if(t)titles[k]=t;else delete titles[k];localStorage.ltitles=JSON.stringify(titles)}
 const savePriv=()=>localStorage.lpriv=JSON.stringify(priv);
 const label=m=>m.media?(m.media.kind==='image'?'📷 Foto':'🎤 Mesaj vokal'):'';
 const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
@@ -322,7 +333,7 @@ $('#out').onclick=()=>{if(es)es.close();es=null;$('#gate').classList.remove('gon
 function connect(){
   if(es)es.close();fresh=true;
   es=new EventSource(`events?id=${me.id}&name=${encodeURIComponent(me.name)}&hue=${me.hue}&room=${room}`);
-  es.addEventListener('hello',e=>{const d=JSON.parse(e.data);$('#list').innerHTML='';msgs.clear();last=null;typers.clear();
+  es.addEventListener('hello',e=>{const d=JSON.parse(e.data);if(!ROOMS[room]){setTitle(room,d.title);head();drawRooms(lastCounts)}$('#list').innerHTML='';msgs.clear();last=null;typers.clear();
     sysMsg(`${info(room)[0]} Byenveni nan ${ROOMS[room]?'sal ':''}${info(room)[1]} — ${info(room)[2]}`);
     d.history.forEach(m=>addMsg(m,true));setPeople(d.users);setCounts(d.counts);bottom(true);fresh=false});
   es.addEventListener('msg',e=>{const m=JSON.parse(e.data),near=atBottom();addMsg(m);
@@ -331,6 +342,7 @@ function connect(){
     if(m.uid!==me.id){sfx.recv();const r=msgs.get(m.id).row.getBoundingClientRect();ring(r.left+20,r.top+r.height/2,m.hue);if(document.hidden){unreadTitle(1);notify(m)}}});
   es.addEventListener('presence',e=>{const d=JSON.parse(e.data);setPeople(d.users);
     if(d.note&&d.note.id!==me.id&&!fresh){const j=d.note.type==='join';sysMsg(j?`✦ ${d.note.name} fèk antre`:`${d.note.name} soti`);j?sfx.join():sfx.leave();if(atBottom())bottom()}});
+  es.addEventListener('title',e=>{const d=JSON.parse(e.data);setTitle(room,d.title);head();drawRooms(lastCounts);sysMsg(d.title?`✏️ ${d.by} bay sal la non «${d.title}»`:`✏️ ${d.by} retire non sal la`);sfx.react();if(atBottom())bottom()});
   es.addEventListener('counts',e=>setCounts(JSON.parse(e.data)));
   es.addEventListener('typing',e=>{const d=JSON.parse(e.data);if(d.id===me.id)return;clearTimeout(typers.get(d.id)?.t);
     typers.set(d.id,{name:d.name,t:setTimeout(()=>{typers.delete(d.id);sub()},3000)});sub()});
@@ -346,7 +358,7 @@ function drawRooms(c={}){const box=$('#rooms');box.innerHTML='';for(const k of [
   if(!ROOMS[k]){const x=el('span','x','✕');x.title='Retire sal sa a nan lis la';x.onclick=e=>{e.stopPropagation();priv=priv.filter(p=>p!==k);savePriv();if(room===k)go('lakou');else drawRooms(lastCounts)};b.append(x)}
   b.onclick=()=>go(k);box.append(b)}}
 let lastCounts={};function setCounts(c){lastCounts=c;drawRooms(c)}
-function head(){$('#rt').textContent=info(room)[0]+' '+info(room)[1];$('#invite').style.display=ROOMS[room]?'none':'grid';sub()}
+function head(){$('#rt').textContent=info(room)[0]+' '+info(room)[1];$('#invite').style.display=$('#ren').style.display=ROOMS[room]?'none':'grid';sub()}
 function avatar(name,hue){const a=el('div','av',(name[0]||'?').toUpperCase());a.style.setProperty('--mh',hue);return a}
 function setPeople(u){people=u;$('#n').textContent=u.length;const box=$('#people');box.innerHTML='';
   u.forEach(p=>{const d=el('div','person');d.append(avatar(p.name,p.hue),el('span','',p.name+(p.id===me.id?' (ou)':'')));box.append(d)});sub()}
@@ -469,7 +481,10 @@ $('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('o
 $('#mk').onclick=()=>{const A='abcdefghjkmnpqrstuvwxyz23456789';let c='';crypto.getRandomValues(new Uint8Array(6)).forEach(v=>c+=A[v%A.length]);enterRoom(c);copyInvite()};
 $('#codef').onsubmit=e=>{e.preventDefault();const c=$('#code').value.trim().toLowerCase();if(!/^[a-z0-9]{4,12}$/.test(c)){toast('Kòd la dwe gen 4 a 12 lèt oswa chif');return}enterRoom(c)};
 $('#invite').onclick=copyInvite;
-addEventListener('keydown',e=>{if(e.key==='Escape'){$('#modal').classList.remove('open');$('#lb').classList.remove('open')}});
+$('#ren').onclick=()=>{$('#rni').value=titles[room]||'';$('#rnm').classList.add('open');$('#rni').focus()};
+$('#rnm').onclick=e=>{if(e.target.id==='rnm')$('#rnm').classList.remove('open')};
+$('#rnf').onsubmit=e=>{e.preventDefault();post('rename',{title:$('#rni').value});$('#rnm').classList.remove('open')};
+addEventListener('keydown',e=>{if(e.key==='Escape'){$('#modal').classList.remove('open');$('#rnm').classList.remove('open');$('#lb').classList.remove('open')}});
 
 /* ---------- Notifikasyon ---------- */
 let notif=localStorage.lnotif==='1'&&'Notification'in window&&Notification.permission==='granted';
