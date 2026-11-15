@@ -133,6 +133,38 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .go:hover{transform:translateY(-2px);filter:brightness(1.1)}
 .go:active{transform:scale(.97)}
 
+#send{transform:none;opacity:1}
+#send svg.arr,#send.ready svg.mic{display:none}#send.ready svg.arr{display:block}
+.pic{display:block;max-width:60vw;height:auto;border-radius:14px;margin:2px 0 4px;cursor:zoom-in;background:rgba(0,0,0,.25);object-fit:cover}
+.gone-media{font-size:13px;opacity:.7;font-style:italic}
+.voice{display:flex;align-items:center;gap:10px;width:230px;max-width:60vw;padding:3px 0}
+.voice button{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.22);flex:none;font-size:13px;color:#fff;transition:.15s}
+.voice button:hover{transform:scale(1.1)}
+.wave{flex:1;display:flex;align-items:center;gap:2px;height:30px;cursor:pointer}
+.wave u{flex:1;border-radius:2px;background:currentColor;opacity:.3;transition:opacity .1s}
+.wave u.on{opacity:1}
+.voice small{font-size:11px;opacity:.8;font-variant-numeric:tabular-nums;min-width:28px}
+#rec{display:none;align-items:center;gap:12px;padding:6px 6px 6px 18px;border-radius:26px;background:rgba(0,0,0,.3);border:1px solid hsl(0 90% 62%/.55);box-shadow:0 0 30px hsl(0 90% 55%/.18)}
+body.rec .compose{display:none}body.rec #rec{display:flex}
+#rec .dot{width:12px;height:12px;border-radius:50%;background:hsl(0 90% 60%);box-shadow:0 0 14px hsl(0 90% 60%);animation:dot 1s infinite}
+#rec b{font-variant-numeric:tabular-nums}#rec span{flex:1;color:var(--dim);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#recsend{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff}
+.addroom{width:100%;margin-top:6px;padding:10px 12px;border-radius:16px;border:1px dashed rgba(255,255,255,.2);color:var(--dim);font-size:13.5px;transition:.2s}
+.addroom:hover{color:var(--ink);border-color:var(--acc);background:rgba(255,255,255,.05)}
+.room .x{opacity:.45;padding:2px 7px;border-radius:8px;font-size:12px}.room .x:hover{opacity:1;background:rgba(255,255,255,.14)}
+.foot{flex-wrap:wrap}.foot .chip{flex:1 1 40%}
+#invite{display:none}
+#modal{position:fixed;inset:0;z-index:40;display:none;place-items:center;padding:20px;background:rgba(0,0,0,.6);animation:fade .2s}
+#modal.open{display:grid}
+#modal .card{background:rgba(18,15,32,.96)}#modal h2{font-size:24px}#modal .go{margin-top:0}
+#modal .or{color:var(--dim);font-size:12px;margin:16px 0;letter-spacing:.14em}
+#modal form{display:flex;gap:8px}#modal form input{text-transform:uppercase;letter-spacing:.12em;min-width:0}
+#modal form .chip{flex:none;padding:0 18px;border-radius:18px}
+#lb{position:fixed;inset:0;z-index:60;display:none;place-items:center;background:rgba(0,0,0,.92);cursor:zoom-out;animation:fade .2s}
+#lb.open{display:grid}#lb img{max-width:94vw;max-height:94dvh;border-radius:12px}
+#toast{position:fixed;z-index:70;top:18px;left:50%;transform:translate(-50%,-80px);padding:10px 18px;border-radius:99px;background:rgba(22,18,36,.96);border:1px solid var(--line);
+  font-size:13.5px;transition:transform .35s cubic-bezier(.2,1.3,.4,1);box-shadow:0 10px 40px rgba(0,0,0,.5);max-width:90vw;text-align:center}
+#toast.show{transform:translate(-50%,0)}
 #shade{display:none}
 @media (max-width:760px){
   #app{grid-template-columns:1fr;padding:0;gap:0}
@@ -165,10 +197,11 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 <div id="app">
   <aside class="panel">
     <div class="logo"><div class="orb"></div>Lakou</div>
-    <div><h3>Sal yo</h3><div id="rooms"></div></div>
+    <div><h3>Sal yo</h3><div id="rooms"></div><button class="addroom" id="addroom">＋ Sal prive</button></div>
     <div><h3>Sou liy · <span id="n">0</span></h3><div id="people"></div></div>
     <div class="foot">
       <button class="chip" id="mute">🔊 Son</button>
+      <button class="chip" id="notif">🔕 Notif</button>
       <button class="chip" id="out">Chanje non</button>
     </div>
   </aside>
@@ -177,6 +210,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     <header>
       <button class="icon" id="menu" aria-label="Meni">☰</button>
       <div class="t"><b id="rt">Lakou</b><small id="sub"></small></div>
+      <button class="icon" id="invite" aria-label="Kopye lyen envitasyon an" title="Kopye lyen envitasyon an">🔗</button>
       <button class="icon" id="mute2" aria-label="Son">🔊</button>
     </header>
     <div id="list" aria-live="polite"></div>
@@ -187,22 +221,42 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <div class="compose">
         <button class="icon" id="eb" aria-label="Emoji">😊</button>
         <textarea id="tx" rows="1" placeholder="Ekri yon mesaj…" maxlength="1000"></textarea>
-        <button id="send" aria-label="Voye"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5v6.6l12 1.9-12 1.9z"/></svg></button>
+        <button class="icon" id="pb" aria-label="Voye yon foto">📷</button>
+        <input type="file" id="file" accept="image/*" hidden>
+        <button id="send" aria-label="Voye oswa anrejistre"><svg class="arr" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5v6.6l12 1.9-12 1.9z"/></svg><svg class="mic" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 0 0-7 0v6A3.5 3.5 0 0 0 12 15zm6.5-3.5a1 1 0 0 0-2 0 4.5 4.5 0 0 1-9 0 1 1 0 0 0-2 0 6.5 6.5 0 0 0 5.5 6.4V21a1 1 0 0 0 2 0v-3.1a6.5 6.5 0 0 0 5.5-6.4z"/></svg></button>
+      </div>
+      <div id="rec"><i class="dot"></i><b id="rect">0:00</b><span>Ap anrejistre…</span>
+        <button class="icon" id="recx" aria-label="Anile">✕</button>
+        <button id="recsend" aria-label="Voye mesaj vokal la"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 22 12 3 3.5v6.6l12 1.9-12 1.9z"/></svg></button>
       </div>
     </footer>
   </main>
 </div>
 <div id="bar"></div>
+<div id="modal"><div class="card panel">
+  <h2>🔒 Sal prive</h2><p>Kreye yon sal epi pataje lyen an ak moun ou vle sèlman.</p>
+  <button class="go" id="mk">Kreye yon nouvo sal</button>
+  <div class="or">OSWA ANTRE AK YON KÒD</div>
+  <form id="codef"><input type="text" id="code" maxlength="12" placeholder="KÒD" autocomplete="off" aria-label="Kòd sal la"><button class="chip">Antre</button></form>
+</div></div>
+<div id="lb"><img alt="Foto an gran"></div>
+<div id="toast" role="status"></div>
 
 <script>
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const ROOMS={lakou:['🏡','Lakou','Tout moun byenveni'],mizik:['🎶','Mizik','Konpa, rap, rasin…'],tek:['🛰️','Teknoloji','Kòd, lide, avni'],blag:['😂','Blag','Vin ri ak nou']};
+let priv=[];try{priv=JSON.parse(localStorage.lpriv||'[]').filter(c=>/^[a-z0-9]{4,12}$/.test(c))}catch{}
+const info=k=>ROOMS[k]||['🔒','Sal '+k.toUpperCase(),'sal prive, pataje lyen an ak zanmi w'];
+const savePriv=()=>localStorage.lpriv=JSON.stringify(priv);
+const label=m=>m.media?(m.media.kind==='image'?'📷 Foto':'🎤 Mesaj vokal'):'';
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
 const EMO='😀 😂 🥹 😍 😎 🤔 😮 😢 😡 🙏 👏 🙌 💪 👍 ❤️ 🔥 ✨ 🎉 🎶 🌴 🇭🇹 🚀 💯 👀'.split(' ');
 const QUICK=['❤️','😂','🔥','👏','😮'];
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
 let me={id:sessionStorage.lid||(sessionStorage.lid=Math.random().toString(36).slice(2)+Date.now().toString(36)),name:'',hue:265};
 let room='lakou',es=null,msgs=new Map(),last=null,replyTo=null,unread=0,typers=new Map(),people=[],fresh=false;
 let muted=localStorage.lmute==='1';
+{const q=(new URLSearchParams(location.search).get('sal')||'').toLowerCase();if(/^[a-z0-9]{4,12}$/.test(q)){room=q;if(!ROOMS[q]&&!priv.includes(q)){priv.push(q);savePriv()}}}
 
 /* ---------- Son (sentetize, pa gen fichye) ---------- */
 let ac;
@@ -269,12 +323,12 @@ function connect(){
   if(es)es.close();fresh=true;
   es=new EventSource(`events?id=${me.id}&name=${encodeURIComponent(me.name)}&hue=${me.hue}&room=${room}`);
   es.addEventListener('hello',e=>{const d=JSON.parse(e.data);$('#list').innerHTML='';msgs.clear();last=null;typers.clear();
-    sysMsg(`${ROOMS[room][0]} Byenveni nan sal ${ROOMS[room][1]} — ${ROOMS[room][2]}`);
+    sysMsg(`${info(room)[0]} Byenveni nan ${ROOMS[room]?'sal ':''}${info(room)[1]} — ${info(room)[2]}`);
     d.history.forEach(m=>addMsg(m,true));setPeople(d.users);setCounts(d.counts);bottom(true);fresh=false});
   es.addEventListener('msg',e=>{const m=JSON.parse(e.data),near=atBottom();addMsg(m);
     typers.delete(m.uid);sub();
     if(m.uid===me.id||near)bottom();else{unread++;$('#pill').style.display='block';$('#pill').textContent=`↓ ${unread} nouvo mesaj`}
-    if(m.uid!==me.id){sfx.recv();const r=msgs.get(m.id).row.getBoundingClientRect();ring(r.left+20,r.top+r.height/2,m.hue);if(document.hidden)unreadTitle(1)}});
+    if(m.uid!==me.id){sfx.recv();const r=msgs.get(m.id).row.getBoundingClientRect();ring(r.left+20,r.top+r.height/2,m.hue);if(document.hidden){unreadTitle(1);notify(m)}}});
   es.addEventListener('presence',e=>{const d=JSON.parse(e.data);setPeople(d.users);
     if(d.note&&d.note.id!==me.id&&!fresh){const j=d.note.type==='join';sysMsg(j?`✦ ${d.note.name} fèk antre`:`${d.note.name} soti`);j?sfx.join():sfx.leave();if(atBottom())bottom()}});
   es.addEventListener('counts',e=>setCounts(JSON.parse(e.data)));
@@ -286,11 +340,13 @@ function connect(){
 const post=(p,b)=>fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:me.id,...b})}).catch(()=>{});
 
 /* ---------- Bò kote ---------- */
-function drawRooms(c={}){const box=$('#rooms');box.innerHTML='';for(const k in ROOMS){const b=el('button','room'+(k===room?' on':''));
-  b.append(el('i','',ROOMS[k][0]),el('b','',ROOMS[k][1]),el('small','',c[k]?c[k]+' ●':''));
-  b.onclick=()=>{document.body.classList.remove('nav');if(k===room)return;room=k;sfx.tap();cancelReply();head();drawRooms(lastCounts);connect()};box.append(b)}}
+function go(k){document.body.classList.remove('nav');if(k===room)return;room=k;sfx.tap();cancelReply();head();drawRooms(lastCounts);if(es)connect()}
+function drawRooms(c={}){const box=$('#rooms');box.innerHTML='';for(const k of [...Object.keys(ROOMS),...priv]){const b=el('button','room'+(k===room?' on':'')),i=info(k);
+  b.append(el('i','',i[0]),el('b','',i[1]),el('small','',c[k]?c[k]+' ●':''));
+  if(!ROOMS[k]){const x=el('span','x','✕');x.title='Retire sal sa a nan lis la';x.onclick=e=>{e.stopPropagation();priv=priv.filter(p=>p!==k);savePriv();if(room===k)go('lakou');else drawRooms(lastCounts)};b.append(x)}
+  b.onclick=()=>go(k);box.append(b)}}
 let lastCounts={};function setCounts(c){lastCounts=c;drawRooms(c)}
-function head(){$('#rt').textContent=ROOMS[room][0]+' '+ROOMS[room][1];sub()}
+function head(){$('#rt').textContent=info(room)[0]+' '+info(room)[1];$('#invite').style.display=ROOMS[room]?'none':'grid';sub()}
 function avatar(name,hue){const a=el('div','av',(name[0]||'?').toUpperCase());a.style.setProperty('--mh',hue);return a}
 function setPeople(u){people=u;$('#n').textContent=u.length;const box=$('#people');box.innerHTML='';
   u.forEach(p=>{const d=el('div','person');d.append(avatar(p.name,p.hue),el('span','',p.name+(p.id===me.id?' (ou)':'')));box.append(d)});sub()}
@@ -314,9 +370,9 @@ function addMsg(m,old){
   if(bigRe.test(m.text)&&[...m.text].length<=8&&!m.reply)row.classList.add('big');
   const bub=el('div','bub');bub.append(el('div','who',m.name));
   if(m.reply){const q=el('div','quote');q.style.setProperty('--qh',m.reply.hue);q.append(el('b','',m.reply.name),document.createTextNode(m.reply.text));bub.append(q)}
-  bub.append(el('div','txt',m.text),el('div','meta',new Date(m.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})));
+  if(m.media)bub.append(mediaEl(m));if(m.text)bub.append(el('div','txt',m.text));bub.append(el('div','meta',new Date(m.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})));
   const rc=el('div','reacts');bub.append(rc);
-  bub.onclick=e=>{if(e.target.closest('.reacts'))return;e.stopPropagation();showBar(m,bub)};
+  bub.onclick=e=>{if(e.target.closest('.reacts,.voice,.pic'))return;e.stopPropagation();showBar(m,bub)};
   let lt=0;bub.addEventListener('touchend',()=>{const n=Date.now();if(n-lt<300){post('react',{msgId:m.id,emoji:'❤️'});hideBar()}lt=n});
   row.append(avatar(m.name,m.hue),bub);list.append(row);
   const rec={data:m,row,rc};msgs.set(m.id,rec);drawReacts(rec);last={uid:m.uid,ts:m.ts,row};
@@ -334,7 +390,7 @@ function showBar(m,bub){bar.innerHTML='';QUICK.forEach(e=>{const b=el('button','
   bar.style.top=(b.top>70?b.top-56:b.bottom+8)+'px';sfx.tap()}
 function hideBar(){bar.style.display='none'}
 document.addEventListener('click',e=>{if(!e.target.closest('#bar'))hideBar()});
-function setReply(m){replyTo=m.id;const r=$('#replying');r.style.display='flex';r.firstElementChild.textContent=`↩ ${m.name}: ${m.text}`;$('#tx').focus()}
+function setReply(m){replyTo=m.id;const r=$('#replying');r.style.display='flex';r.firstElementChild.textContent=`↩ ${m.name}: ${m.text||label(m)}`;$('#tx').focus()}
 function cancelReply(){replyTo=null;$('#replying').style.display='none'}
 $('#replying button').onclick=cancelReply;
 
@@ -343,7 +399,7 @@ const tx=$('#tx'),sb=$('#send');let lastType=0;
 function grow(){tx.style.height='auto';tx.style.height=Math.min(tx.scrollHeight,130)+'px';sb.classList.toggle('ready',!!tx.value.trim())}
 tx.oninput=()=>{grow();const n=Date.now();if(n-lastType>1800&&tx.value){lastType=n;post('typing',{})}};
 tx.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();fire()}if(e.key==='Escape'){cancelReply();$('#emo').style.display='none'}};
-sb.onclick=fire;sb.onpointerdown=e=>e.preventDefault();
+sb.onclick=()=>tx.value.trim()?fire():startRec();sb.onpointerdown=e=>e.preventDefault();
 function fire(){const t=tx.value.trim();if(!t)return;post('send',{text:t,replyTo});tx.value='';grow();cancelReply();lastType=0;
   const r=sb.getBoundingClientRect();burst(r.left+22,r.top+22,me.hue);sfx.send();
   sb.classList.remove('fire');sb.offsetWidth;sb.classList.add('fire');$('#emo').style.display='none';if(navigator.vibrate)navigator.vibrate(8)}
@@ -355,6 +411,77 @@ function drawMute(){$('#mute').textContent=muted?'🔇 San son':'🔊 Son';$('#m
 $('#mute').onclick=$('#mute2').onclick=()=>{muted=!muted;localStorage.lmute=muted?'1':'0';drawMute();sfx.tap()};drawMute();
 $('#menu').onclick=()=>document.body.classList.add('nav');$('#shade').onclick=()=>document.body.classList.remove('nav');
 let tn=0;function unreadTitle(a){tn=a?tn+a:0;document.title=tn?`(${tn}) Lakou`:'Lakou — chat room'}
+
+/* ---------- Medya: foto + mesaj vokal ---------- */
+let playing=null;
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e.t);e.t=setTimeout(()=>e.classList.remove('show'),2800)}
+function mediaEl(m){const src='media/'+m.media.id;
+  if(m.media.kind==='image'){const im=el('img','pic'),w=m.media.w||4,h=m.media.h||3;im.alt='Foto '+m.name;
+    im.style.width=Math.round(Math.min(260,300*w/h))+'px';im.style.aspectRatio=w+'/'+h;
+    im.onerror=()=>im.replaceWith(el('div','gone-media','📷 Foto a pa disponib ankò'));
+    im.onclick=()=>{$('#lb img').src=src;$('#lb').classList.add('open')};im.src=src;return im}
+  const v=el('div','voice'),b=el('button','','▶'),wv=el('div','wave'),t=el('small','',fmt(m.media.dur||0)),dur=m.media.dur||1,bars=[];
+  b.setAttribute('aria-label','Jwe mesaj vokal la');
+  let s=m.id*7919+13;for(let i=0;i<28;i++){s=(s*9301+49297)%233280;const x=el('u');x.style.height=(22+s/233280*78)+'%';wv.append(x);bars.push(x)}
+  let a=null;
+  const paint=()=>{const p=a.currentTime/dur;bars.forEach((x,i)=>x.classList.toggle('on',i/28<p));t.textContent=fmt(a.currentTime||dur)};
+  const init=()=>{if(a)return;a=new Audio(src);a.btn=b;a.ontimeupdate=paint;a.onended=()=>{a.currentTime=0;b.textContent='▶';paint()};
+    a.onerror=()=>v.replaceWith(el('div','gone-media','🎤 Mesaj vokal la pa disponib ankò'))};
+  b.onclick=()=>{init();if(a.paused){if(playing&&playing!==a){playing.pause();playing.btn.textContent='▶'}playing=a;a.play().catch(()=>{});b.textContent='⏸'}else{a.pause();b.textContent='▶'}};
+  wv.onclick=e=>{init();const r=wv.getBoundingClientRect();try{a.currentTime=Math.max(0,Math.min(.99,(e.clientX-r.left)/r.width))*dur}catch{}paint()};
+  v.append(b,wv,t);return v}
+async function upload(blob,kind,extra){if(blob.size>600000){toast('Fichye a twò gwo');return}
+  try{const r=await fetch(`media?id=${me.id}&kind=${kind}${extra}${replyTo?'&replyTo='+replyTo:''}`,{method:'POST',headers:{'Content-Type':blob.type.split(';')[0]},body:blob});
+    if(!r.ok)throw 0;cancelReply();sfx.send();const q=sb.getBoundingClientRect();burst(q.left+22,q.top+22,me.hue)}catch{toast('Voye a pa mache, eseye ankò')}}
+async function sendPhoto(file){if(!file||!file.type.startsWith('image/'))return;
+  try{const bm=await createImageBitmap(file);
+    for(const [max,q] of [[1280,.8],[1000,.65],[720,.5]]){const k=Math.min(1,max/Math.max(bm.width,bm.height)),c=document.createElement('canvas');
+      c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);
+      const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',q));if(blob&&blob.size<=600000)return upload(blob,'image',`&w=${c.width}&h=${c.height}`)}
+    toast('Foto a twò gwo')}catch{toast('Mwen pa ka li foto sa a')}}
+$('#pb').onclick=()=>$('#file').click();
+$('#file').onchange=e=>{sendPhoto(e.target.files[0]);e.target.value=''};
+tx.onpaste=e=>{const f=[...(e.clipboardData?.files||[])].find(f=>f.type.startsWith('image/'));if(f){e.preventDefault();sendPhoto(f)}};
+$('#lb').onclick=()=>$('#lb').classList.remove('open');
+
+let rec=null,recT0=0,recTick=null,recCancel=false;
+async function startRec(){if(rec)return;
+  if(!navigator.mediaDevices||!window.MediaRecorder){toast('Navigatè sa a pa ka anrejistre vwa');return}
+  let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch{toast('Mikwo a pa otorize');return}
+  const mt=['audio/webm;codecs=opus','audio/mp4','audio/ogg;codecs=opus'].find(t=>MediaRecorder.isTypeSupported(t));
+  const chunks=[];rec=new MediaRecorder(stream,mt?{mimeType:mt,audioBitsPerSecond:32000}:{audioBitsPerSecond:32000});
+  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());clearInterval(recTick);document.body.classList.remove('rec');
+    const dur=(Date.now()-recT0)/1000,type=(rec.mimeType||mt||'audio/webm').split(';')[0];rec=null;
+    if(recCancel){sfx.leave();return}if(dur<.7){toast('Mesaj la twò kout');return}
+    upload(new Blob(chunks,{type}),'audio','&dur='+dur.toFixed(1))};
+  recCancel=false;recT0=Date.now();rec.start();document.body.classList.add('rec');$('#rect').textContent='0:00';tone(660,0,.12,'sine',.1,990);
+  recTick=setInterval(()=>{const s=(Date.now()-recT0)/1000;$('#rect').textContent=fmt(s);if(s>=60)rec.stop()},250)}
+$('#recx').onclick=()=>{if(rec){recCancel=true;rec.stop()}};
+$('#recsend').onclick=()=>{if(rec)rec.stop()};
+
+/* ---------- Sal prive ---------- */
+function enterRoom(c){if(!ROOMS[c]&&!priv.includes(c)){priv.push(c);savePriv()}$('#modal').classList.remove('open');go(c);drawRooms(lastCounts)}
+function copyInvite(){const l=location.origin+location.pathname+'?sal='+room;
+  (navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(()=>toast('Lyen envitasyon an kopye ✓'),()=>prompt('Kopye lyen sa a:',l))}
+$('#addroom').onclick=()=>{document.body.classList.remove('nav');$('#code').value='';$('#modal').classList.add('open')};
+$('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('open')};
+$('#mk').onclick=()=>{const A='abcdefghjkmnpqrstuvwxyz23456789';let c='';crypto.getRandomValues(new Uint8Array(6)).forEach(v=>c+=A[v%A.length]);enterRoom(c);copyInvite()};
+$('#codef').onsubmit=e=>{e.preventDefault();const c=$('#code').value.trim().toLowerCase();if(!/^[a-z0-9]{4,12}$/.test(c)){toast('Kòd la dwe gen 4 a 12 lèt oswa chif');return}enterRoom(c)};
+$('#invite').onclick=copyInvite;
+addEventListener('keydown',e=>{if(e.key==='Escape'){$('#modal').classList.remove('open');$('#lb').classList.remove('open')}});
+
+/* ---------- Notifikasyon ---------- */
+let notif=localStorage.lnotif==='1'&&'Notification'in window&&Notification.permission==='granted';
+function drawNotif(){$('#notif').textContent=notif?'🔔 Notif':'🔕 Notif'}
+$('#notif').onclick=async()=>{
+  if(notif)notif=false;
+  else{if(!('Notification'in window)){toast('Navigatè sa a pa sipòte notifikasyon');return}
+    let p='denied';try{p=await Notification.requestPermission()}catch{}
+    if(p!=='granted'){toast('Notifikasyon yo bloke nan navigatè a');return}notif=true;toast('Notifikasyon aktive ✓')}
+  localStorage.lnotif=notif?'1':'0';drawNotif()};
+function notify(m){if(!notif)return;try{const n=new Notification(`${m.name} · ${info(room)[1]}`,{body:m.text||label(m),tag:'lakou'});n.onclick=()=>{window.focus();n.close()}}catch{}}
+drawNotif();
 </script>
 </body>
 </html>
